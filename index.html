@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FlirtVerse — Clean Spatial Deck v5</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #04010a;
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 2500px;
+        }
+
+        #ambientGlow {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 50% 25%, #ff006e, #1a0033, #04010a);
+            z-index: -2;
+            transition: background 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            will-change: background;
+        }
+
+        .ambient-particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .ambient-sparkle {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.12);
+            pointer-events: none;
+            animation: floatSystem 7s linear infinite;
+        }
+
+        @keyframes floatSystem {
+            0% { transform: translateY(105vh) scale(0.4) rotate(0deg); opacity: 0; }
+            25% { opacity: 0.3; }
+            75% { opacity: 0.3; }
+            100% { transform: translateY(-10vh) scale(1.1) rotate(360deg); opacity: 0; }
+        }
+
+        /* App Structural Shell Layout Frame */
+        .app-shell {
+            width: 100%;
+            max-width: 410px;
+            height: 95vh;
+            max-height: 820px;
+            display: flex;
+            flex-direction: column;
+            padding: 16px 12px;
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 2.3rem;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: -1.5px;
+            background: linear-gradient(135deg, #ffffff 40%, #ffccd5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .deck-timeline {
+            display: flex;
+            gap: 4px;
+            margin: 4px auto 12px auto;
+            width: 92%;
+        }
+
+        .timeline-segment {
+            flex: 1;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .timeline-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff006e, #ff70a6);
+            transition: width 0.4s ease;
+        }
+
+        /* Unified Stage Workspace Viewport Area */
+        .stage-viewport {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transform-style: preserve-3d;
+            width: 100%;
+        }
+
+        /* Spatial Card Geometry */
+        .spatial-card-wrapper {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1.1);
+        }
+
+        .card-face {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 40px;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(45px);
+            -webkit-backdrop-filter: blur(45px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 40px 75px -25px rgba(0, 0, 0, 0.9);
+            transform: translateZ(0);
+        }
+
+        .entrance-transition {
+            animation: smoothInCard 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes smoothInCard {
+            0% { opacity: 0; transform: scale(0.9) translateY(35px) rotateX(-10deg); filter: blur(6px); }
+            100% { opacity: 1; transform: scale(1) translateY(0) rotateX(0deg); filter: blur(0); }
+        }
+
+        .exit-left-flick { animation: throwLeft 0.38s ease-in forwards; }
+        .exit-right-flick { animation: throwRight 0.38s ease-in forwards; }
+
+        @keyframes throwLeft { 100% { transform: translateX(-160%) rotate(-20deg) scale(0.85); opacity: 0; } }
+        @keyframes throwRight { 100% { transform: translateX(160%) rotate(20deg) scale(0.85); opacity: 0; } }
+
+        /* Component Interior Configurations Layers Layout */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .badge-pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
+
+        .utility-header-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mini-circle-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .mini-circle-btn:hover { background: rgba(255, 255, 255, 0.15); transform: scale(1.05); }
+
+        /* Card Content Core Layout Elements */
+        .card-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 5px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .flirt-line-text {
+            font-size: 1.95rem;
+            font-weight: 700;
+            line-height: 1.45;
+            text-align: center;
+            background: linear-gradient(180deg, #ffffff 55%, #d8d8d8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transition: font-size 0.2s ease;
+        }
+
+        /* Clipboard Context Visual Overlay Notify Sheet */
+        .copy-toast-overlay {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.4px;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            color: #ff4d8d;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        }
+
+        .copy-toast-overlay.visible { opacity: 1; transform: scale(1); }
+
+        /* Bottom-Integrated Sheet Dock Panel Controls */
+        .integrated-action-sheet {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 26px;
+            padding: 8px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.3fr;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .sheet-btn {
+            background: transparent;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 6px;
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .sheet-btn span.btn-icon { font-size: 1.25rem; }
+        .sheet-btn span.btn-label { font-size: 0.62rem; font-weight: 500; opacity: 0.5; }
+
+        .sheet-btn:hover { background: rgba(255, 255, 255, 0.05); }
+        .sheet-btn:active { transform: scale(0.95); }
+
+        .sheet-btn.liked span.btn-icon { animation: popPulse 0.35s ease-out forwards; color: #ff006e; }
+        .sheet-btn.liked span.btn-label { opacity: 0.9; color: #ff70a6; }
+
+        @keyframes popPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+
+        .primary-next-btn {
+            background: linear-gradient(135deg, #ff006e, #ff5c98);
+            box-shadow: 0 6px 16px rgba(255, 0, 110, 0.3);
+        }
+        .primary-next-btn span.btn-label { opacity: 0.9; color: #ffffff; }
+        .primary-next-btn:hover { background: linear-gradient(135deg, #ff4d8d, #ff76a8); }
+
+        /* Floating Particle Burst System */
+        .pop-particle {
+            position: absolute;
+            pointer-events: none;
+            font-size: 1.5rem;
+            z-index: 100;
+            animation: scatterEngine 0.6s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes scatterEngine {
+            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+            100% { transform: translate(var(--dx), var(--dy)) scale(1.3) rotate(var(--dr)); opacity: 0; }
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.7rem;
+            opacity: 0.3;
+            margin-top: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        @media(max-width: 480px) {
+            .app-shell { height: 96vh; }
+            .card-face { padding: 22px; border-radius: 32px; }
+            .flirt-line-text { font-size: 1.55rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ambientGlow"></div>
+    <div class="ambient-particles" id="ambientParticleSpace"></div>
+
+    <div class="app-shell">
+        <header>
+            <h1>FlirtVerse ❤️</h1>
+            <div class="deck-timeline" id="timelineTracker"></div>
+        </header>
+
+        <div class="stage-viewport" id="interactionViewport">
+            <div class="spatial-card-wrapper entrance-transition" id="deckMainCard">
+                
+                <div class="card-face">
+                    <div class="card-header">
+                        <span class="badge-pill" id="displayTypeBadge">Loading...</span>
+                        <div class="utility-header-controls">
+                            <!-- Cleaned: Only Sound Toggle remains here -->
+                            <div class="mini-circle-btn" id="audioToggleBtn" title="Toggle Music">🔇</div>
+                        </div>
+                    </div>
+
+                    <div class="card-body" id="cardBodySurface">
+                        <div class="flirt-line-text" id="displayFlirtText">
+                            Building your creative interface array...
+                        </div>
+                        <div class="copy-toast-overlay" id="copyToastOverlay">Line Copied! 📋</div>
+                    </div>
+
+                    <div class="integrated-action-sheet">
+                        <button class="sheet-btn" id="likeActionBtn">
+                            <span class="btn-icon">❤️</span>
+                            <span class="btn-label" id="likeCounterDisplay">--</span>
+                        </button>
+                        <button class="sheet-btn" id="copyActionBtn">
+                            <span class="btn-icon">📋</span>
+                            <span class="btn-label">Copy Line</span>
+                        </button>
+                        <button class="sheet-btn primary-next-btn" id="nextActionBtn">
+                            <span class="btn-icon">➡️</span>
+                            <span class="btn-label">Next Drop</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <footer>
+            Swipe horizontally or tap line text to immediately copy to clipboard
+        </footer>
+    </div>
+
+    <script>
+        // Decorative Aura Sparkles Engine
+        const particleSpace = document.getElementById('ambientParticleSpace');
+        function spawnAuraSparkle() {
+            const particle = document.createElement('div');
+            particle.classList.add('ambient-sparkle');
+            particle.innerHTML = ['✨', '🌸', '💖', '❤️'][Math.floor(Math.random() * 4)];
+            particle.style.left = Math.random() * 100 + 'vw';
+            particle.style.animationDuration = (Math.random() * 2.5 + 4.5) + 's';
+            particle.style.fontSize = (Math.random() * 6 + 12) + 'px';
+            particleSpace.appendChild(particle);
+            setTimeout(() => particle.remove(), 7000);
+        }
+        setInterval(spawnAuraSparkle, 700);
+
+        // Core Unified Content Pool Archive
+        const ARCHIVE_POOL = [
+            { id: 201, text: 'Tumhare aane se hansi khil jaaye, manaayein hum jashn tumhare... 🎊 Chaand ka bhi guroor utar jaaye, sitaron jaisi aankhein tumhari ✨👁️', type: 'Hindi Shayari 👑', background: 'radial-gradient(circle at 50% 25%, #ff006e, #1a0033, #04010a)' },
+            { id: 202, text: 'Tujhe dole aajahi alagad kaahitari saangun jaataat... 🤍 Mee haak dyaavi tula na bolata kaahi, aani too ya vedyaachya manaatla na aikata samajoon ghyaave 🥺🎵', type: 'Marathi Kavita 🌸', background: 'radial-gradient(circle at 50% 25%, #7209b7, #0d001a, #020005)' },
+            { id: 203, text: 'Tumhara wo saadhaa swabhaav aur chehre ki maasoomiyat... 🤗 khwaah-ma-khwaah mere dil ki dhadkan badha jaati hai 💓💫', type: 'Hindi Pure ✨', background: 'radial-gradient(circle at 50% 25%, #b5179e, #1f0033, #04010a)' },
+            { id: 204, text: 'Niraagas tujhya dolyaat sakhe, kiti khol artha asaave... 🔮 Paahoon saundarya tujhe, shabda maajhe khuloon hasaave 🌹✨', type: 'Marathi Classic ❤️', background: 'radial-gradient(circle at 50% 25%, #f72585, #1a0022, #030006)' },
+            { id: 205, text: 'Tumhein dekhte hi yeh man bekaabu ho jaata hai, 🌊 jaise shaant samandar mein achaanak ufaan aa jaata hai 🔥❤️', type: 'Hindi Romance 🚀', background: 'radial-gradient(circle at 50% 25%, #ff4d8d, #1a0033, #04010a)' },
+            { id: 206, text: 'Tula paahile an saanj manda jhaali... 🌅 Shuddhit hote aataach saare, too paahile an vel dhunda jhaali 🌌💫', type: 'Marathi Vibe 🌿', background: 'radial-gradient(circle at 50% 25%, #3a0ca3, #08001a, #020005)' },
+            { id: 207, text: 'Aisa kya likhoon ki tum shabdon ke paar mujhe pehchaan lo? ✍️❤️ Aur meri kavita ki pankti tumhare jeene ka geet ban jaaye 🎶✨', type: 'Hindi Deep 🔮', background: 'radial-gradient(circle at 50% 25%, #4361ee, #050a21, #01020a)' },
+            { id: 208, text: 'Tujhe dole na paahataa maajhyatla sarva kaahi paahoon jaataat... 👀 mirror image, kadhi vaatta mee hee tujhya najaret kaayamcha saamaavoon jaava 🔒💖', type: 'Marathi Deep 💞', background: 'radial-gradient(circle at 50% 25%, #7209b7, #1c002b, #04010a)' }
+        ];
+
+        let currentIndex = 0;
+        let runningLikesCount = 184;
+        let likedRegistryIds = JSON.parse(localStorage.getItem('fverse_liked_v5')) || [];
+
+        // HTML5 Audio Pipeline Instance Setup
+        // Save your chosen track precisely as "background-vibe.mp3" right next to index.html
+        const backgroundMusic = new Audio('background-vibe.mp3');
+        backgroundMusic.loop = true;
+        backgroundMusic.volume = 0.4; // Controlled cozy volume level
+
+        const deckMainCard = document.getElementById('deckMainCard');
+        const interactionViewport = document.getElementById('interactionViewport');
+        const displayFlirtText = document.getElementById('displayFlirtText');
+        const displayTypeBadge = document.getElementById('displayTypeBadge');
+        const ambientGlow = document.getElementById('ambientGlow');
+        const timelineTracker = document.getElementById('timelineTracker');
+        
+        const cardBodySurface = document.getElementById('cardBodySurface');
+        const copyToastOverlay = document.getElementById('copyToastOverlay');
+        const likeActionBtn = document.getElementById('likeActionBtn');
+        const likeCounterDisplay = document.getElementById('likeCounterDisplay');
+        const copyActionBtn = document.getElementById('copyActionBtn');
+        const nextActionBtn = document.getElementById('nextActionBtn');
+        const audioToggleBtn = document.getElementById('audioToggleBtn');
+
+        let touchStartX = 0;
+        let dragDistanceX = 0;
+        let activeDragState = false;
+
+        function applyDynamicTextScale(str) {
+            const boundary = str.length;
+            if(boundary > 100) displayFlirtText.style.fontSize = "1.25rem";
+            else if(boundary > 70) displayFlirtText.style.fontSize = "1.45rem";
+            else if(boundary > 40) displayFlirtText.style.fontSize = "1.7rem";
+            else displayFlirtText.style.fontSize = "1.95rem";
+        }
+
+        function refreshTimelineIndicators() {
+            timelineTracker.innerHTML = '';
+            ARCHIVE_POOL.forEach((_, idx) => {
+                const segment = document.createElement('div');
+                segment.classList.add('timeline-segment');
+                const fill = document.createElement('div');
+                fill.classList.add('timeline-fill');
+                if (idx <= currentIndex) fill.style.width = '100%';
+                segment.appendChild(fill);
+                timelineTracker.appendChild(segment);
+            });
+        }
+
+        function routeDeckIndexData(targetIndex) {
+            const activeNode = ARCHIVE_POOL[targetIndex];
+            deckMainCard.className = 'spatial-card-wrapper';
+            void deckMainCard.offsetWidth; 
+
+            displayFlirtText.innerHTML = activeNode.text;
+            applyDynamicTextScale(activeNode.text);
+            displayTypeBadge.innerHTML = activeNode.type;
+            ambientGlow.style.background = activeNode.background;
+
+            runningLikesCount = Math.floor(Math.random() * 110) + 140;
+
+            if (likedRegistryIds.includes(activeNode.id)) {
+                likeActionBtn.classList.add('liked');
+                runningLikesCount++;
+            } else {
+                likeActionBtn.classList.remove('liked');
+            }
+            likeCounterDisplay.innerHTML = runningLikesCount;
+
+            refreshTimelineIndicators();
+
+            deckMainCard.style.transform = 'translate3d(0,0,0) rotate(0deg) scale(1)';
+            deckMainCard.classList.add('entrance-transition');
+        }
+
+        function triggerParticleBurst(clientX, clientY) {
+            const boundingBox = deckMainCard.getBoundingClientRect();
+            const placementX = clientX ? (clientX - boundingBox.left) : (boundingBox.width / 2);
+            const placementY = clientY ? (clientY - boundingBox.top) : (boundingBox.height / 2);
+            
+            const shapePool = ['❤️', '✨', '💖', '🔥', '🌸'];
+            for (let i = 0; i < 10; i++) {
+                const node = document.createElement('div');
+                node.classList.add('pop-particle');
+                node.innerHTML = shapePool[Math.floor(Math.random() * shapePool.length)];
+                node.style.left = `${placementX}px`;
+                node.style.top = `${placementY}px`;
+                
+                const dxVal = (Math.random() * 180 - 90).toFixed(0);
+                const dyVal = (Math.random() * -180 - 20).toFixed(0);
+                const rotation = (Math.random() * 360).toFixed(0);
+                
+                node.style.setProperty('--dx', `${dxVal}px`);
+                node.style.setProperty('--dy', `${dyVal}px`);
+                node.style.setProperty('--dr', `${rotation}deg`);
+                
+                deckMainCard.appendChild(node);
+                setTimeout(() => node.remove(), 600);
+            }
+        }
+
+        function executeLineCopyTextPipeline() {
+            const textToCopy = ARCHIVE_POOL[currentIndex].text;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                copyToastOverlay.classList.add('visible');
+                setTimeout(() => copyToastOverlay.classList.remove('visible'), 1500);
+            });
+        }
+
+        function executeLikeToggleRegistration() {
+            const nodeId = ARCHIVE_POOL[currentIndex].id;
+
+            if (likedRegistryIds.includes(nodeId)) {
+                likedRegistryIds = likedRegistryIds.filter(id => id !== nodeId);
+                runningLikesCount--;
+                likeActionBtn.classList.remove('liked');
+            } else {
+                likedRegistryIds.push(nodeId);
+                runningLikesCount++;
+                likeActionBtn.classList.add('liked');
+                triggerParticleBurst(null, null);
+            }
+            localStorage.setItem('fverse_liked_v5', JSON.stringify(likedRegistryIds));
+            likeCounterDisplay.innerHTML = runningLikesCount;
+        }
+
+        // Toggle Audio Track Function
+        function toggleAudioTrack() {
+            if (backgroundMusic.paused) {
+                backgroundMusic.play().then(() => {
+                    audioToggleBtn.innerHTML = '🔊';
+                }).catch(() => {
+                    alert("Click anywhere on the screen first to let your browser play music!");
+                });
+            } else {
+                backgroundMusic.pause();
+                audioToggleBtn.innerHTML = '🔇';
+            }
+        }
+
+        likeActionBtn.addEventListener('click', (e) => { e.stopPropagation(); executeLikeToggleRegistration(); });
+        copyActionBtn.addEventListener('click', (e) => { e.stopPropagation(); executeLineCopyTextPipeline(); });
+        cardBodySurface.addEventListener('click', () => { executeLineCopyTextPipeline(); triggerParticleBurst(window.innerWidth/2, window.innerHeight/2); });
+        audioToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleAudioTrack(); });
+
+        const executeCardSwipeWipeAnimation = (direction = 'right') => {
+            deckMainCard.classList.remove('entrance-transition');
+            deckMainCard.classList.add(direction === 'left' ? 'exit-left-flick' : 'exit-right-flick');
+            setTimeout(() => {
+                currentIndex = (currentIndex + 1) % ARCHIVE_POOL.length;
+                routeDeckIndexData(currentIndex);
+            }, 350);
+        };
+
+        nextActionBtn.addEventListener('click', (e) => { e.stopPropagation(); executeCardSwipeWipeAnimation('right'); });
+
+        function processTouchStart(clientXValue) {
+            touchStartX = clientXValue;
+            activeDragState = true;
+            deckMainCard.style.transition = 'none';
+            deckMainCard.classList.remove('entrance-transition');
+        }
+
+        // Auto-play trigger when a user interacts anywhere with the deck first time
+        function initializeAutoplay() {
+            if (backgroundMusic.paused) {
+                backgroundMusic.play().then(() => { audioToggleBtn.innerHTML = '🔊'; });
+            }
+            window.removeEventListener('click', initializeAutoplay);
+            window.removeEventListener('touchstart', initializeAutoplay);
+        }
+        window.addEventListener('click', initializeAutoplay);
+        window.addEventListener('touchstart', initializeAutoplay);
+
+        function processTouchMove(clientXValue) {
+            if (!activeDragState) return;
+            dragDistanceX = clientXValue - touchStartX;
+            const angularFactor = dragDistanceX * 0.05;
+            deckMainCard.style.transform = `translate3d(${dragDistanceX}px, 0px, 0px) rotate(${angularFactor}deg) scale(0.96)`;
+        }
+
+        function processTouchEnd() {
+            if (!activeDragState) return;
+            activeDragState = false;
+
+            if (Math.abs(dragDistanceX) > 140) {
+                executeCardSwipeWipeAnimation(dragDistanceX > 0 ? 'right' : 'left');
+            } else {
+                deckMainCard.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                deckMainCard.style.transform = 'translate3d(0px, 0px, 0px) rotateX(0deg) rotateY(0deg) scale(1)';
+            }
+            touchStartX = dragDistanceX = 0;
+        }
+
+        deckMainCard.addEventListener('mousedown', (e) => { if(!e.target.closest('.integrated-action-sheet, .mini-circle-btn')) processTouchStart(e.clientX); });
+        window.addEventListener('mousemove', (e) => processTouchMove(e.clientX));
+        window.addEventListener('mouseup', processTouchEnd);
+
+        deckMainCard.addEventListener('touchstart', (e) => { if(!e.target.closest('.integrated-action-sheet, .mini-circle-btn')) processTouchStart(e.touches[0].clientX); });
+        window.addEventListener('touchmove', (e) => processTouchMove(e.touches[0].clientX));
+        window.addEventListener('touchend', processTouchEnd);
+
+        interactionViewport.addEventListener('mousemove', (e) => {
+            if(window.innerWidth < 768 || activeDragState) return;
+            const boundaries = interactionViewport.getBoundingClientRect();
+            const ratioX = ((e.clientX - boundaries.left) / boundaries.width) - 0.5;
+            const ratioY = ((e.clientY - boundaries.top) / boundaries.height) - 0.5;
+            deckMainCard.style.transform = `rotateX(${(ratioY * -8).toFixed(2)}deg) rotateY(${(ratioX * 8).toFixed(2)}deg)`;
+        });
+
+        interactionViewport.addEventListener('mouseleave', () => {
+            if(activeDragState) return;
+            deckMainCard.style.transition = 'transform 0.3s ease-out';
+            deckMainCard.style.transform = 'rotateX(0deg) rotateY(0deg)';
+        });
+
+        window.addEventListener('DOMContentLoaded', () => { routeDeckIndexData(currentIndex); });
+    </script>
+</body>
+</html>
